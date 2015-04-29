@@ -13,3 +13,6 @@ More:
 * `mtco pull` pull pages from repo.
 * `mtco push [message]` push pages to repo.
 
+## About
+
+**mtco** means [**More Than Code**](http://xiaoge.me). 
