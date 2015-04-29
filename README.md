@@ -1,5 +1,6 @@
 # mtco
-Static Blog Generator **only** for Coder
+
+Static Blog Generator **only** for Github-Pages
 
 ## Usage
 
@@ -11,3 +12,4 @@ Only Three Steps:
 More:
 * `mtco pull` pull pages from repo.
 * `mtco push [message]` push pages to repo.
+
