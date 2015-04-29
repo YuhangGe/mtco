@@ -1,0 +1,28 @@
+{
+  "name": "mtco",
+  "version": "1.0.0",
+  "description": "Static Blog Generator",
+  "main": "index.js",
+  "bin": {
+    "mtco": "bin/mtco.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YuhangGe/mtco.git"
+  },
+  "keywords": [
+    "mtco"
+  ],
+  "author": "Yuhang GE",
+  "license": "GNU",
+  "bugs": {
+    "url": "https://github.com/YuhangGe/mtco/issues"
+  },
+  "homepage": "https://github.com/YuhangGe/mtco",
+  "dependencies": {
+    "yargs": "^3.8.0"
+  }
+}
