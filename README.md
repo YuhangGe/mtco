@@ -11,6 +11,7 @@ Only Three Steps:
 3. `mtco`
 
 More:
+
 * `mtco pull` pull pages from repo.
 * `mtco push [message]` push pages to repo.
 
