@@ -5,6 +5,7 @@ Static Blog Generator **only** for Github-Pages
 ## Usage
 
 Only Three Steps:
+
 1. `mtco git@github.com/yourgithubrepo.git`
 2. `cd yourgithubrepo`
 3. `mtco`
