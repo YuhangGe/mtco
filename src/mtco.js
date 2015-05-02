@@ -65,7 +65,14 @@ function check() {
   check_gitignore();
   if (!$exists(MTCO_DIRNAME)) {
     $mkdir(MTCO_DIRNAME);
-    git_clone('https://github.com/YuhangGe/mtco.git --branch template --single-branch', path.join(cur_dir, MTCO_DIRNAME), check_mtco);
+    git_clone('https://github.com/YuhangGe/mtco.git --branch template --single-branch', path.join(cur_dir, MTCO_DIRNAME), function() {
+      exec('rm -rf ' + path.join(cur_dir, MTCO_DIRNAME, '.git'), function(error) {
+        if (error) {
+          err(error);
+        }
+        check_mtco();
+      });
+    });
   } else {
     check_mtco();
   }
