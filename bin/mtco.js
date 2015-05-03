@@ -4,11 +4,22 @@ var argv = require('yargs')
   .argv;
 var mtco = require('../index.js');
 
-if (argv._.length > 0) {
-  mtco.init({
-    repo: argv._[0]
-  });
-} else {
-  mtco.serve();
-}
+var cmd = argv._[0];
 
+switch (cmd) {
+  case 'g':
+  case 'generate':
+    mtco.generate();
+    break;
+  case 'create':
+  case 'new':
+  case 'c':
+    mtco.create(argv._[1]);
+    break;
+  case 'server':
+  case 's':
+    break;
+  default:
+    mtco.clone(cmd);
+    break;
+}
