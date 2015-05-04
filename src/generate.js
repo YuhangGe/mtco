@@ -4,6 +4,7 @@ var path = require('path');
 var ARTICLE_DIRNAME = require('./config.js').ARTICLE_DIRNAME;
 var _ = require('lodash');
 var cur_dir;
+var db = require('./db.js');
 
 module.exports = {
   run: generate
@@ -22,23 +23,27 @@ function generate(dir) {
     return year > 0
   }).sort();
 
-  _.map(year_list, function(year) {
-    return g_each_year(year);
-  }).reduce(function (soFar, f) {
-    return soFar.then(f);
-  }, Q(true));
+  var r = Q();
+  year_list.forEach(function(year) {
+    r = r.then(function() {
+      return g_each_year(year.toString());
+    });
+  });
+
+  return r;
 }
 
 function g_each_year(year) {
 
   var disk_posts = new Array(12);
-
-  $.readdir(path.join(cur_dir, year), false).forEach(function(cd) {
-    if (!/^\d{4}$/.test(cd)) {
+  //$.log('read year', year);
+  $.readdir(path.join(cur_dir, year), false).forEach(function(dir) {
+    var cd = dir.substring(dir.length - 5);
+    if (!/^\/\d{4}$/.test(cd)) {
       return;
     }
-    var month = parseInt(cd.substring(0, 2)) - 1;
-    var day = parseInt(cd.substring(2)) - 1;
+    var month = parseInt(cd.substring(1, 3)) - 1;
+    var day = parseInt(cd.substring(3)) - 1;
 
     $.readdir(path.join(cur_dir, year, cd), 'md', false).forEach(function(file) {
       var bn = path.basename(file);
@@ -56,22 +61,21 @@ function g_each_year(year) {
     });
   });
 
-  var defer = Q.defer();
-  var i = 0;
-  disk_posts.forEach(function(posts, month) {
+  return _.map(disk_posts, function(posts, month) {
     if (!posts) {
-      i++;
-      if (i === disk_posts.length) {
-        defer.resolve();
-      }
-      return;
+      return Q.resolve(null);
     }
-    $.log(year, '/' + month);
-    db.getPosts(year, month + 1).then(function(posts) {
+    return db.get_posts(year, month + 1);
+  }).reduce(function(sequence, m_promise) {
+    return sequence.then(function() {
+      return m_promise;
+    }).then(function(db_posts) {
+      if (db_posts) {
+        $.log(db_posts);
+      } else {
+        $.log('skip');
+      }
+    });
+  }, Q.resolve());
 
-
-    }).catch(defer.reject);
-  });
-
-  return defer.promise;
 }

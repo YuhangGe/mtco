@@ -5,7 +5,8 @@ var _ = require('lodash');
 
 module.exports = {
   open: open,
-  close: close
+  close: close,
+  get_posts: get_posts
 };
 
 var db = null;
@@ -94,4 +95,21 @@ function close() {
     return;
   }
   db.close();
+}
+var i = 0;
+
+function get_posts(year, month) {
+  $.log('try get', year, month);
+  var defer = Q.defer();
+  setTimeout(function() {
+    $.log('get posts', year, month);
+    //if (year === '2014') {
+      defer.resolve({
+        year: year,
+        month: month
+      });
+    //}
+  }, i===1 ? 2000 : 100);
+  i++;
+  return defer.promise;
 }
