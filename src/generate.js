@@ -23,14 +23,18 @@ function generate(dir) {
   }).filter(function(year) {
     return year > 0
   }).sort();
-  $.log('Got years:', year_list.join(', '));
+
+  if (year_list.length === 0) {
+    $.log('Got nothing. You may create an article first.');
+  } else {
+    $.log('Got years:', year_list.join(', '));
+  }
   var r = Q();
   year_list.forEach(function(year) {
     r = r.then(function() {
       return g_each_year(year.toString());
     });
   });
-
   return r;
 }
 
@@ -68,7 +72,7 @@ function g_each_year(year) {
 
   $.log('Got months:', _.map(disk_posts, function(list, month) {
     return month
-  }).join(', '), '\n');
+  }).join(', '));
 
   return _.map(disk_posts, function(posts, month) {
     var defer = Q.defer();
@@ -88,7 +92,7 @@ function g_each_year(year) {
       if (!data) {
         return;
       }
-      deal_data(data);
+      return deal_data(data);
     });
   }, Q.resolve());
 }
@@ -98,8 +102,10 @@ function deal_data(data) {
   var disk_posts = data.disk_posts;
   var not_modified_count = 0;
 
-  $.log('Generate articles of month:', data.year + '/' + data.month);
-  db_posts.forEach(function(db_post) {
+  $.log('\nGenerate articles of month:', data.year + '/' + data.month);
+
+  var r = Q();
+  _.each(db_posts, function(db_post) {
     var day = db_post.day;
     var disk_post = null;
     if (disk_posts[day]) {
@@ -108,7 +114,6 @@ function deal_data(data) {
     if (disk_post) {
       disk_post.__covered = true;
       if (disk_post.stat.mtime.getTime() > db_post.modified_time) {
-        $.log('Generate modified article:', db_post.name);
 
       } else {
         not_modified_count++;
@@ -121,17 +126,27 @@ function deal_data(data) {
     }
   });
 
-  disk_posts.forEach(function(disk_post) {
-    if (disk_post.__covered = true) {
-      return;
-    }
-    $.out('Generating created article:', disk_post.name, '...');
+  _.each(disk_posts, function(day_list) {
+    day_list.forEach(function(disk_post) {
+      if (disk_post.__covered) {
+        return;
+      }
+      r.then(function() {
+        var defer = Q.defer();
+        $.out('  Created:  ' + disk_post.name + '.md ... ');
+        db.create_post(disk_post).then(function() {
+          $.out('Done: ' + disk_post.name + '.html\n');
+          defer.resolve();
+        }, defer.reject);
+        return defer.promise;
+      });
+    });
 
-    $.out('Done!');
   });
 
   if (not_modified_count) {
     $.log('Skip other', not_modified_count, 'articles not modified.');
   }
 
+  return r;
 }

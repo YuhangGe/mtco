@@ -6,7 +6,8 @@ var _ = require('lodash');
 module.exports = {
   open: open,
   close: close,
-  get_posts: get_posts
+  get_posts: get_posts,
+  create_post: create_post
 };
 
 var db = null;
@@ -99,4 +100,8 @@ function close() {
 
 function get_posts(year, month) {
   return db.all("SELECT * FROM post WHERE year = ? AND month = ?", [parseInt(year), parseInt(month)]);
+}
+
+function create_post(post) {
+  return Q();
 }
