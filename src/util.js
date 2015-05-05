@@ -1,8 +1,10 @@
 var fs = require('fs');
 var path = require('path');
+var _ = require('lodash');
 
 function err() {
   console.error.apply(console, arguments);
+  console.trace();
   debugger;
   process.exit(-1);
 }
@@ -13,6 +15,10 @@ function log() {
 
 function debug() {
   console.log.apply(console, arguments);
+}
+
+function out(msg) {
+  process.stdout.write(msg);
 }
 
 /*
@@ -41,9 +47,14 @@ function readdir(dir_path, ext, deep) {
 }
 
 module.exports = {
+  isDefined: function(obj) {
+    //lodash没有 isDefined 你会信？！
+    return !_.isUndefined(obj);
+  },
   log: log,
   err: err,
   debug: debug,
+  out: out,
   exists: function(file) {
     return fs.existsSync(file);
   },

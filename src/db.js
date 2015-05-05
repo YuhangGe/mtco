@@ -76,9 +76,9 @@ function open(db_path) {
   } else {
     sqlite.createDatabase(db_path).then(function(database) {
       db = database;
-      db.on('trace', function(sql) {
-        $.debug('SQL:', sql);
-      });
+      //db.on('trace', function(sql) {
+      //  $.debug('SQL:', sql);
+      //});
       Q.all(_.map(tables, function(table_name, idx) {
         return create_table_if_not_exists(idx);
       })).then(function() {
@@ -96,20 +96,7 @@ function close() {
   }
   db.close();
 }
-var i = 0;
 
 function get_posts(year, month) {
-  $.log('try get', year, month);
-  var defer = Q.defer();
-  setTimeout(function() {
-    $.log('get posts', year, month);
-    //if (year === '2014') {
-      defer.resolve({
-        year: year,
-        month: month
-      });
-    //}
-  }, i===1 ? 2000 : 100);
-  i++;
-  return defer.promise;
+  return db.all("SELECT * FROM post WHERE year = ? AND month = ?", [parseInt(year), parseInt(month)]);
 }
