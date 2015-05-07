@@ -103,5 +103,19 @@ function get_posts(year, month) {
 }
 
 function create_post(post) {
-  return Q();
+  var cols = [];
+  var vals =_.map(post, function(v, k) {
+    return {
+      col: k,
+      val: v
+    }
+  }).filter(function(cv) {
+    return columns[0][cv.col]
+  }).map(function(cv) {
+    cols.push(cv.col);
+    return cv.val;
+  });
+  $.log(cols);
+  $.log(vals);
+  return db.run('INSERT INTO post (' + columns.join(',') + ') VALUES('+ values.join(',') +')');
 }

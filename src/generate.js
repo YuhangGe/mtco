@@ -3,14 +3,17 @@ var $ = require('./util.js');
 var path = require('path');
 var ARTICLE_DIRNAME = require('./config.js').ARTICLE_DIRNAME;
 var _ = require('lodash');
-var cur_dir;
+var Mustache = require('mustache');
+var cur_dir = '';
+var dest_dir = '';
 var db = require('./db.js');
 
 module.exports = {
   run: generate
 };
 
-function generate(dir) {
+function generate(dir, dst_dir) {
+  dest_dir = dst_dir;
   cur_dir = path.join(dir, ARTICLE_DIRNAME);
   $.log('Scanning year categories...')
   var year_list = _.map($.readdir(cur_dir, false), function(ydir) {
@@ -65,7 +68,9 @@ function g_each_year(year) {
         month: month,
         day: day,
         name: name,
-        stat: $.stat(file)
+        _stat: $.stat(file),
+        _path: file,
+        _dst_path: path.join(dest_dir, year, cd)
       });
     });
   });
@@ -114,7 +119,14 @@ function deal_data(data) {
     if (disk_post) {
       disk_post.__covered = true;
       if (disk_post.stat.mtime.getTime() > db_post.modified_time) {
+        r = r.then(function() {
+          $.out('  New:  ' + disk_post.name + '.md ... ');
 
+          return db.create_post(disk_post).then(function() {
+
+            $.out('Done: ' + disk_post.name + '.html\n');
+          });
+        })
       } else {
         not_modified_count++;
       }
@@ -131,14 +143,13 @@ function deal_data(data) {
       if (disk_post.__covered) {
         return;
       }
-      r.then(function() {
-        var defer = Q.defer();
-        $.out('  Created:  ' + disk_post.name + '.md ... ');
-        db.create_post(disk_post).then(function() {
+      r = r.then(function() {
+        $.out('  New:  ' + disk_post.name + '.md ... ');
+
+        return db.create_post(disk_post).then(function(val) {
+          $.log(val);
           $.out('Done: ' + disk_post.name + '.html\n');
-          defer.resolve();
-        }, defer.reject);
-        return defer.promise;
+        });
       });
     });
 
