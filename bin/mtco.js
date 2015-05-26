@@ -11,15 +11,22 @@ switch (cmd) {
   case 'generate':
     mtco.generate();
     break;
-  case 'create':
-  case 'new':
-  case 'c':
-    mtco.create(argv._[1]);
-    break;
-  case 'server':
   case 's':
+  case 'server':
+    mtco.server();
+    break;
+  case 'create':
+  case 'edit':
+  case 'c':
+    mtco.create(cmd);
     break;
   default:
-    mtco.clone(cmd);
+    if (!cmd) {
+      mtco.generate();
+    } else if (/^(?:(?:http)|(?:git@)).+?\.git$/.test(cmd)) {
+      mtco.clone(cmd);
+    } else {
+      mtco.create(cmd);
+    }
     break;
 }

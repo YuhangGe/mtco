@@ -7,6 +7,7 @@ var db = require('./db.js');
 var creator = require('./create.js');
 var generator = require('./generate.js');
 var Config = require('./config.js');
+var server = require('./server.js');
 
 var cur_dir = path.resolve(process.cwd());
 
@@ -20,7 +21,7 @@ function init(repo) {
     if (!$.exists(cur_dir)) {
       $.mkdir(cur_dir);
     }
-    git.clone(repo, cur_dir, defer.resolve);
+    git.clone(repo + ' --branch gh-pages', cur_dir, defer.resolve);
   }
   return defer.promise;
 }
@@ -56,7 +57,7 @@ function get_ready() {
 
 function generate() {
   get_ready().then(function() {
-    return generator.run(path.join(cur_dir, Config.MTCO_DIRNAME));
+    return generator.run(path.join(cur_dir, Config.MTCO_DIRNAME), cur_dir);
   }).then(function() {
     $.log('Generate Pages Finish!');
     db.close();
@@ -67,7 +68,6 @@ function create(post_name) {
   get_ready().then(function() {
     return creator.create(path.join(cur_dir, Config.MTCO_DIRNAME), post_name);
   }).then(function(file_name) {
-    $.log('Article created at:', file_name);
     db.close();
   }).catch($.err);
 }
@@ -84,8 +84,13 @@ function clone(repo) {
   }).catch($.err);
 }
 
+function serve() {
+  server();
+}
+
 module.exports = {
   clone: clone,
   create: create,
-  generate: generate
+  generate: generate,
+  server: serve
 };

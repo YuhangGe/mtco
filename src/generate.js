@@ -3,10 +3,10 @@ var $ = require('./util.js');
 var path = require('path');
 var ARTICLE_DIRNAME = require('./config.js').ARTICLE_DIRNAME;
 var _ = require('lodash');
-var Mustache = require('mustache');
 var cur_dir = '';
 var dest_dir = '';
 var db = require('./db.js');
+var Parser = require('./parse.js');
 
 module.exports = {
   run: generate
@@ -65,9 +65,14 @@ function g_each_year(year) {
         m[day] = d = [];
       }
       d.push({
+        year: year,
         month: month,
         day: day,
-        name: name,
+        title: name,
+        category: 0,
+        tags: [],
+        content: '',
+        _md: cd,
         _stat: $.stat(file),
         _path: file,
         _dst_path: path.join(dest_dir, year, cd)
@@ -106,6 +111,8 @@ function deal_data(data) {
   var db_posts = data.db_posts;
   var disk_posts = data.disk_posts;
   var not_modified_count = 0;
+  var tags_modified = [];
+  var categories_modified = [];
 
   $.log('\nGenerate articles of month:', data.year + '/' + data.month);
 
@@ -114,15 +121,14 @@ function deal_data(data) {
     var day = db_post.day;
     var disk_post = null;
     if (disk_posts[day]) {
-      disk_post = _.find(disk_posts[day], 'name', db_post.name);
+      disk_post = _.find(disk_posts[day], 'name', db_post.title);
     }
     if (disk_post) {
       disk_post.__covered = true;
       if (disk_post.stat.mtime.getTime() > db_post.modified_time) {
         r = r.then(function() {
-          $.out('  New:  ' + disk_post.name + '.md ... ');
-
-          return db.create_post(disk_post).then(function() {
+          $.out('  Modified:  ' + disk_post.name + '.md ... ');
+          return db.update_post(disk_post).then(function() {
 
             $.out('Done: ' + disk_post.name + '.html\n');
           });
@@ -144,12 +150,16 @@ function deal_data(data) {
         return;
       }
       r = r.then(function() {
-        $.out('  New:  ' + disk_post.name + '.md ... ');
-
-        return db.create_post(disk_post).then(function(val) {
-          $.log(val);
-          $.out('Done: ' + disk_post.name + '.html\n');
-        });
+        $.out('  Created:  ' + disk_post.title + '.md ... ');
+        Parser.parse(disk_post);
+        if (!$.exists(disk_post._dst_path)) {
+          $.mkdir(disk_post._dst_path);
+        }
+        $.write(path.join(disk_post._dst_path, disk_post.title + '.html'), Parser.render(disk_post));
+        //return db.create_post(disk_post).then(function(val) {
+          //$.log(val);
+          //$.out('Done: ' + disk_post.name + '.html\n');
+        //});
       });
     });
 
@@ -158,6 +168,10 @@ function deal_data(data) {
   if (not_modified_count) {
     $.log('Skip other', not_modified_count, 'articles not modified.');
   }
+
+  r = r.then(function() {
+
+  });
 
   return r;
 }

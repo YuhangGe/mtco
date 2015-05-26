@@ -7,39 +7,31 @@ module.exports = {
   open: open,
   close: close,
   get_posts: get_posts,
-  create_post: create_post
+  create_post: create_post,
+  get_tag_posts: get_posts_by_tag,
+  get_category_posts: get_posts_by_category
 };
 
 var db = null;
 
-var tables = ['post', 'tag', 'category', 'post_tag', 'post_category'];
+var tables = ['post', 'post_tag'];
 var columns = [{
   id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
-  name: 'TEXT NOT NULL',
-  title: 'TEXT',
+  title: 'TEXT NOT NULL',
+  category: 'INTEGER NOT NULL DEFAULT 0',
   year: 'INTEGER NOT NULL',
   month: 'INTEGER NOT NULL',
   day: 'INTEGER NOT NULL',
   modified_time: 'NUMERIC NOT NULL DEFAULT CURRENT_TIMESTAMP'
 }, {
-  id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
-  name: 'TEXT NOT NULL'
-}, {
-  id: 'INTEGER PRIMARY KEY AUTOINCREMENT',
-  name: 'TEXT NOT NULL'
-}, {
   post_id: 'INTEGER NOT NULL',
-  tag_id: 'INTEGER NOT NULL'
-}, {
-  post_id: 'INTEGER NOT NULL',
-  category_id: 'INTEGER NOT NULL'
+  tag: 'TEXT NOT NULL'
 }];
 var indexes = [[{
-  search_index: 'year, month'
-}], false, false, [{
-  post_tag_index: 'post_id, tag_id'
+  search_index: 'year, month',
+  category_index: 'category'
 }], [{
-  post_category_index: 'post_id, category_id'
+  tag_index: 'post_id, tag'
 }]];
 
 function create_table_if_not_exists(i) {
@@ -71,15 +63,15 @@ function create_table_if_not_exists(i) {
 function open(db_path) {
   var defer = Q.defer();
   if (db !== null) {
-    Q.delay(0).then(function() {
+    Q().then(function() {
       defer.resolve(db);
     });
   } else {
     sqlite.createDatabase(db_path).then(function(database) {
       db = database;
-      //db.on('trace', function(sql) {
-      //  $.debug('SQL:', sql);
-      //});
+      db.on('trace', function(sql) {
+        $.debug('SQL:', sql);
+      });
       Q.all(_.map(tables, function(table_name, idx) {
         return create_table_if_not_exists(idx);
       })).then(function() {
@@ -101,6 +93,12 @@ function close() {
 function get_posts(year, month) {
   return db.all("SELECT * FROM post WHERE year = ? AND month = ?", [parseInt(year), parseInt(month)]);
 }
+function get_posts_by_tag(tag) {
+  return db.all("SELECT post.* FROM post, post_tag WHERE post.id = post_tag.post_id AND post_tag.tag = ?", tag);
+}
+function get_posts_by_category(category) {
+  return db.all("SELECT * FROM post WHERE category = ?", category);
+}
 
 function create_post(post) {
   var cols = [];
@@ -115,7 +113,5 @@ function create_post(post) {
     cols.push(cv.col);
     return cv.val;
   });
-  $.log(cols);
-  $.log(vals);
-  return db.run('INSERT INTO post (' + columns.join(',') + ') VALUES('+ values.join(',') +')');
+  return db.run('INSERT INTO post (' + cols.join(',') + ') VALUES('+ vals.join(',') +')');
 }

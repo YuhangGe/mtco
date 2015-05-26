@@ -2,7 +2,7 @@ var Q = require('Q');
 var $ = require('./util.js');
 var path = require('path');
 var ARTICLE_DIRNAME = require('./config.js').ARTICLE_DIRNAME;
-
+var exec = require('child_process').execSync;
 
 module.exports = {
   create: create
@@ -52,11 +52,14 @@ function create(dir, post_name) {
   }
 
   var new_file = path.join(dir2, posts.name + '.md');
-  if ($.exists(new_file)) {
-    $.err('ERROR: Article with name "' + post_name + '" is exists at: ' + new_file);
+  if (!$.exists(new_file)) {
+    $.write(new_file, "@tag 装逼，javascript\n@category 感性生活\n\n\n不只代码\n\n\n生活为上");
+    $.log('Article created at:', new_file);
+  } else {
+    $.log('Article ', new_file, 'exists.');
   }
 
-  $.write(new_file, "@title Title Here\r\n@tag hello, world\r\n\r\nHello, World.   \r\nThis is my pure article.");
+  exec('subl ' + new_file);
 
   return Q.resolve(new_file);
 }

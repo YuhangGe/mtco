@@ -46,6 +46,9 @@ function readdir(dir_path, ext, deep) {
   return walk(dir_path);
 }
 
+function exists(filename) {
+  return fs.existsSync(filename);
+}
 module.exports = {
   isDefined: function(obj) {
     //lodash没有 isDefined 你会信？！
@@ -55,16 +58,23 @@ module.exports = {
   err: err,
   debug: debug,
   out: out,
-  exists: function(file) {
-    return fs.existsSync(file);
-  },
+  exists: exists,
   stat: function(path) {
     return fs.statSync(path);
   },
-  mkdir: function(path) {
-    fs.mkdirSync(path);
+  mkdir: function(dir) {
+    var ps = dir[0] === '/' ? '/' : '';
+    dir.split(/\/|\\/).forEach(function(p) {
+      p = p.trim();
+      if (p && !exists(ps = path.join(ps, p))) {
+        fs.mkdirSync(ps);
+      }
+    });
   },
   readdir: readdir,
+  read: function(filename) {
+    return fs.readFileSync(filename).toString();
+  },
   write: function(filename, content) {
     fs.writeFileSync(filename, content);
   }
